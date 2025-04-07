@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
-class Deck(models.Model):
+class DeckModel(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -14,7 +14,7 @@ class Deck(models.Model):
 class FlashCardModel(models.Model):
     question = models.TextField()
     answer = models.TextField()
-    deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name='cards')
+    deck = models.ForeignKey(DeckModel, on_delete=models.CASCADE, related_name='cards')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

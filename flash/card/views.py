@@ -51,3 +51,23 @@ class DeckDetailView(APIView):
         deck = self.get_object(pk, request.user)
         deck.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+class FlashCardView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        cards = FlashCardModel.objects.filter(deck__user =request.user)
+        serializer = FlashCardSerializer(cards, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = FlashCardSerializer(data=request.data)
+        if serializer.is_valid():
+            deck = DeckModel.objects.get(pk=serializer.data['deck'].pk)
+            if deck.user != request.user:
+                return Response({'error':'not allowed'}, status=status.HTTP_403_FORBIDDEN)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

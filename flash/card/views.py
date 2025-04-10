@@ -1,3 +1,4 @@
+from django.core.serializers import serialize
 from django.http import Http404
 from django.shortcuts import render
 from .serializers import DeckSerializer, FlashCardSerializer
@@ -71,3 +72,34 @@ class FlashCardView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FlashCardDetailView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self, id, user):
+        try:
+            return FlashCardModel.objects.get(id=pk, user=user)
+        except FlashCardModel.DoesNotExist:
+            raise Http404
+
+    def get(self, request, id):
+        card = FlashCardModel.objects.get(id=id, user=request.user)
+        serializer = FlashCardSerializer(card)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, id):
+        card = FlashCardModel.objects.get(id=id, user=request.user)
+        serializer = FlashCardSerializer(card , data=request.data)
+        if serializer.is_valid():
+            deck = DeckModel.objects.get(id=serializer.validated_data['deck'].id)
+            if deck.user != request.user:
+                return Response({'error':'not allowed'}, status=status.HTTP_403_FORBIDDEN)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        card = FlashCardModel.objects.get(id=id, user=request.user)
+        card.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
